@@ -1,0 +1,131 @@
+#using QuantEcon
+using Plots
+using FastGaussQuadrature
+using BenchmarkTools
+
+#Include ayiagari functions and types
+include("ayiagari.jl")
+
+"""
+Construct and Ayiagari model instace of all parts needed to solve the model
+"""
+function AyiagariModel(
+    β = 0.96,
+    α = 0.33,
+    δ = 0.05,
+    μ = 1.00,
+    σ = 0.2,
+    ρ = 0.3,
+    ζ = 100000000.0,
+    InterestRate = 0.025,
+    GridSize = 50,
+    GridMax = 50,
+    IndividualStates = [0.1;1.0],
+    NumberOfQuadratureNodesPerElement = 2
+)
+
+
+    QuadratureAbscissas,QuadratureWeights = gausslegendre(NumberOfQuadratureNodesPerElement)
+
+    ## Nodes chosen in within  the bounds of the policy function
+    function grid_fun(a_min,a_max,na, pexp)
+        x = range(a_min,step=0.5,length=na)
+        grid = a_min .+ (a_max-a_min)*(x.^pexp/maximum(x.^pexp))
+        return grid
+    end
+    nodes = grid_fun(0.0,GridMax,GridSize,4)
+
+    r = InterestRate
+    w = (1.0 - α)*(α/(r+δ))^(α/(1.0 - α))
+        
+    #Dimension of the problem
+    NumberOfNodes = GridSize
+    NumberOfIndividualStates = size(IndividualStates,1)
+    NumberOfElements = NumberOfNodes-1
+    NumberOfVertices = 2 #num of vertices per element
+    
+    #solution guess
+    Guess = zeros(NumberOfNodes*NumberOfIndividualStates)
+    for j=1:NumberOfIndividualStates
+        for i=1:NumberOfNodes
+            n = (j-1)*NumberOfNodes + i
+            assets = (1.0 + r)*nodes[i] + w*IndividualStates[j] - 0.6 
+            assets > 0.0 ? Guess[n] = 19.0/20.0 * assets : Guess[n] = 1.0/4.0 * assets 
+        end
+    end
+    GuessMatrix = reshape(Guess,NumberOfNodes,NumberOfIndividualStates)
+        
+    #Build finite element mesh with node indices (k1,k2) per element
+    ElementVertexIndices = ones(Int64,NumberOfVertices,NumberOfElements) #element indices
+    ElementVertices = zeros(NumberOfVertices,NumberOfElements)
+    for i = 1:NumberOfElements
+        ElementVertexIndices[1,i],ElementVertexIndices[2,i] = i,i+1     
+        ElementVertices[1,i],ElementVertices[2,i] = nodes[i],nodes[i+1]
+    end
+
+    
+    #Stochastic process
+    TransitionMatrix = [0.9 0.1; 0.1 0.9]
+
+    #Distribution
+    NumberOfHouseholds = 400
+    res = collect(range(nodes[1],stop = nodes[end],length = NumberOfHouseholds))
+
+    Uc(c) = c^(-μ)
+    Ucc(c) = -μ*c^(-μ-1.0)
+
+    Parameters = ModelParameters(β,α,δ,μ,σ,ρ,ζ,Uc,Ucc)
+    
+    MarkovianFiniteElement(nodes,ElementVertices,ElementVertexIndices,TransitionMatrix,IndividualStates,Guess,GuessMatrix,NumberOfNodes,NumberOfIndividualStates,NumberOfElements,NumberOfQuadratureNodesPerElement,Parameters,QuadratureWeights,QuadratureAbscissas,zeros(NumberOfIndividualStates*NumberOfNodes,NumberOfIndividualStates*NumberOfNodes),zeros(NumberOfIndividualStates*NumberOfNodes),NumberOfHouseholds,res)
+
+end
+
+
+MarkovElement =  AyiagariModel()
+ResidualSize = MarkovElement.NumberOfNodes*MarkovElement.NumberOfIndividualStates
+NumberOfHouseholds = 400
+
+
+#@btime WeightedResidual2(MarkovElement.GuessMatrix,0.025,MarkovElement)
+#@show WeightedResidual(MarkovElement.Guess,0.025,MarkovElement)[2][1,:]
+
+theta = SolveFiniteElement(0.025,MarkovElement.Guess,MarkovElement)
+Grid,EA,EquilibriumPDF = StationaryDistribution(0.025,theta,MarkovElement)
+println(theta)
+println(EA)
+
+###Plot the Distribution
+p1 = plot(MarkovElement.DistributionAssetGrid,EquilibriumPDF[:,1],label="unemployed")
+p2 = plot(MarkovElement.DistributionAssetGrid,EquilibriumPDF[:,2],label="employed")
+p = plot(p1,p2, layout=(2,1),legend = true)
+savefig(p,"PlotDistribution.pdf")
+
+#=
+EquilibriumIR,EquilibriumPolicy,EquilibriumCapital = equilibrium(MarkovElement) 
+Demand,Supply = PlotEquilibrium(EquilibriumIR,MarkovElement)
+Pol = reshape(EquilibriumPolicy,MarkovElement.NumberOfNodes,MarkovElement.NumberOfIndividualStates)
+
+#Get distribution of Equilibrium interest rate
+_,EA,EquilibriumPDF = StationaryDistribution(EquilibriumIR,EquilibriumPolicy,MarkovElement)
+
+###Plot guess
+p = plot(MarkovElement.Nodes,MarkovElement.GuessMatrix, label = "Low income consumption")
+p = plot!(MarkovElement.Nodes,MarkovElement.GuessMatrix, label = "High income consumption")
+p = plot!(MarkovElement.Nodes,MarkovElement.Nodes, line = :dot ,label = "High income consumption")
+savefig(p,"PlotGuess.pdf")
+
+
+###Plot the policy
+pol = reshape(EquilibriumPolicy,MarkovElement.NumberOfNodes,MarkovElement.NumberOfIndividualStates)
+p = plot(MarkovElement.Nodes[1:10],pol[1:10,1], label = "Low income consumption")
+p = plot!(MarkovElement.Nodes[1:10],pol[1:10,2], label = "High income consumption")
+p = plot!(MarkovElement.Nodes[1:10],MarkovElement.Nodes[1:10], line = :dot ,label = "High income consumption")
+savefig(p,"PlotSolution.pdf")
+
+###Plot the Distribution
+p1 = plot(MarkovElement.DistributionAssetGrid,EquilibriumPDF[1:NumberOfHouseholds],label="unemployed")
+p2 = plot(MarkovElement.DistributionAssetGrid,EquilibriumPDF[NumberOfHouseholds+1:2*NumberOfHouseholds],label="employed")
+p = plot(p1,p2, layout=(2,1),legend = true)
+savefig(p,"PlotDistribution.pdf")
+
+=#

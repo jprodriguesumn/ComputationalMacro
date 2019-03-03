@@ -1,0 +1,155 @@
+include("BCA_POR.jl")
+readdlm("ausdata.txt")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+ausparams
+include("BCA_POR.jl")
+ausparams
+1.0144^(1/4)-1
+include("BCA_POR.jl")
+ausparams
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+ausdata_raw
+include("BCA_POR.jl")
+ausdata_raw
+ausdata_raw[117,:]
+ausdata_raw[113,:]
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+L,Sbar,P0,P,Q,A,B,C = mleq(ausest,ausparams,ausdata)
+A
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+ausest
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+ L,Sbar,P0,P,Q,A,B,C = mleq(ausest,ausparams,ausdata)
+A
+B
+C
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+using Nlsolve
+NLsolve
+using NLsolve
+    function res(
+        x::Array{Float64},
+        res::Array{Float64},
+        exogss::Array{Float64},
+        params::Array{Float64})
+        
+        gn,gz,β,δ,ψ,σ,θ = params
+        z,τl,τx,g = exp(exogss[1]),exogss[2],exogss[3],exp(exogss[4])
+        βhat = β*(1.0+gz)^(-σ)
+        
+        kss,lss = x[1],x[2]
+        f = kss^θ*(z*lss)^(1.0-θ)
+        css = f - (1.0 + gz)*(1.0 + gn)*kss + (1.0 - δ)*kss - g
+        xss = f - css - g
+        ∂f∂k = θ * kss^(θ-1.0) * (z*lss)^(1.0-θ)
+        ∂f∂l = (1.0-θ) * kss^θ*(z*lss)^(-θ) * z
+
+        res[1] =  (ψ*css) - (1-lss)*(1-τl)*∂f∂l
+        res[2] =  css*(1.+τx) - css*βhat*(∂f∂k + (1.0-δ)*(1.0 + τx))
+
+        return res
+    end
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+ausparams
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+BigFloat(ausparams)
+BigFloat.(ausparams)
+ L,Sbar,P0,P,Q,A,B,C = mleq(ausest,ausparams,ausdata)
+A
+B
+C
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+ausdata
+include("BCA_POR.jl")
+ausdata
+include("BCA_POR.jl")
+ausdata
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+ausdata
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+mleq(ausest,ausparams,ausdata)
+include("BCA_POR.jl")
+wedges
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+wedges
+include("BCA_POR.jl")
+include("BCA_POR.jl")
+wedges
+loutput
+include("BCA_POR.jl")
+ausest
+wedges
+ L,Sbar,P0,P,Q,A,B,C = mleq(ausest,ausparams,ausdata)
+A
+ L,Sbar,P0,P,Q,A,B,C = mleq(ausest,ausparams,ausdata)
+A
+include("BCA_POR.jl")
+austheta
+ausest
+include("BCA_POR.jl")
+include("BCA_AUS.jl")
+include("BCA_AUS.jl")
+thet_st
+include("BCA_AUS.jl")
+thet_est
+thet_st
+include("BCA_AUS.jl")
+XX
+include("BCA_AUS.jl")
+XX
+include("BCA_AUS.jl")
+include("BCA_AUS.jl")
+include("BCA_AUS.jl")
+include("BCA_AUS.jl")
+ausest
+FF
+XX
+XX

@@ -1,0 +1,57 @@
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+cd(".."
+input("BCA_USA.jl")
+include("BCA_USA.jl")
+mleq(usest,usparams,usdata)
+include("BCA_USA.jl")
+mleq(usest,usparams,usdata)
+include("BCA_USA.jl")
+mleq(usest,usparams,usdata)
+include("BCA_USA.jl")
+usest
+include("BCA_USA.jl")
+usest
+include("BCA_USA.jl")
+id = findfirst(FF,minimum(FF))
+writedlm("usestJP.txt",XX[:,id])
+
+
+usest = readdlm("usestJP.txt")[:,1]
+
+_,_,_,loutput,wedges =  log_lin_wedges(usest,1,usparams,usdata) ## 1 implies steady state at period 1959q1
+start_T = 81
+final_T = 81+28
+#plott = plot(fmt = :png)
+plot(100*(exp.(wedges[start_T:final_T,1])/exp.(wedges[start_T,1])).^0.65, label="productivity wedge")
+plot!(100*(1.0 + wedges[start_T,3])*(1 ./ (1.0+wedges[start_T:final_T,3])), label="investment wedge")
+plot!(100*(1.0 - wedges[start_T:final_T,2])./(1.0 - wedges[start_T,2]), label="labor wedge")
+plot!(100*exp.(loutput[start_T:final_T])./exp.(loutput[start_T]), label="output")
+plot!(title="Wedges from loglinear model",legend=:topleft)
+savefig("us_wedges.png")
+
+_,_,_,loutput,wedges =  log_lin_wedges(usest,1,usparams,usdata) ## 1 implies steady state at
+usest
+usparams
+usdata
+size(usdata)
+siz = size(usdata)
+siz[1]
+_,_,_,loutput,wedges =  log_lin_wedges(usest,1,usparams,usdata) ## 1 implies steady state at period 1959q1
+start_T = 81
+final_T = 81+28
+#plott = plot(fmt = :png)
+plot(100*(exp.(wedges[start_T:final_T,1])/exp.(wedges[start_T,1])).^0.65, label="productivity wedge")
+plot!(100*(1.0 + wedges[start_T,3])*(1 ./ (1.0+wedges[start_T:final_T,3])), label="investment wedge")
+plot!(100*(1.0 - wedges[start_T:final_T,2])./(1.0 - wedges[start_T,2]), label="labor wedge")
+plot!(100*exp.(loutput[start_T:final_T])./exp.(loutput[start_T]), label="output")
+plot!(title="Wedges from loglinear model",legend=:topleft)
+savefig("us_wedges.png")
+
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+include("BCA_USA.jl")
+include("BCA_USA.jl")

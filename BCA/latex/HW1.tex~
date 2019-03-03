@@ -1,0 +1,343 @@
+\documentclass{article} %this is an article
+\usepackage[lmargin=.75in,rmargin=.75in,tmargin=1.in,bmargin=1in]{geometry} % setting margins
+%\usepackage{tree-dvips}
+\usepackage{tikz}  %makes crazy graphs
+\usepackage{enumitem}
+% \usetikzlibrary{snakes}
+%\usepackage[flushleft]{threeparttable} %% makes notes for tables that wraps around width of table
+%\usepackage{chronology}
+\usepackage[round]{natbib}  %% beatiful bibliography
+%\usepackage{wrapfig}
+%\usepackage{longtable} %%multipage table
+%\usepackage{qtree}
+\usepackage{verbatim} %all kinds of shit
+\usepackage{graphicx} %beautiful figures
+%\usepackage{graphics}
+%\usepackage{color}
+%\usepackage{caption}
+\usepackage{subcaption} %subcaption on the the subfigures
+%\usepackage{multirow}
+%\usepackage{sidecap}
+%\usepackage{epstopdf}
+\usepackage{amssymb} %beautiful math
+\usepackage{amsmath,amssymb,amsfonts,amsthm,array} %beautiful math
+\usepackage{amsthm}  %beautiful math
+\usepackage{pgfplots}  %Normal distribution figure
+\usepackage[colorlinks=true,linkcolor=red, citecolor=red]{hyperref} %sets my preferences for cross reference
+
+
+
+\begin{document}
+\section*{Question 1}
+Consider the following problem:
+\begin{align*}
+  \max_{\{c_t, x_t, l_t\}} & \quad  E\sum_{t=0}^{\infty} \beta^t \left\{ \log(c_t) + \phi \log(l_t)     \right\}N_t    \\
+  st:     & \quad c_t + x_t =k_t^{\theta} \left( (1+ \gamma_z)^t z_t h_t   \right )^{1-\theta}  \\
+          & \quad N_{t+1}k_{t+1} = [(1-\delta)k_t +x_t]N_t \\
+          & \quad \log z_t = \rho \log z_{t-1} + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2) \\
+          & \quad h_t + l_t = 1 \\
+          & \quad c_t , x_t \geq 0 \text{ in all states}
+\end{align*}
+%%
+where $N_t = (1 + \gamma_n)^t $. The goal of this exercise is to compute equilibria in 3 different ways.
+\begin{enumerate}
+\item iterate on bellman's equation
+\item Map it to a linear quadratic problem
+\item Apply Vaughan's method
+\end{enumerate}
+First note that most of the tools emplied in this exercise can be found in \cite{anderson1996mechanics}
+We can first make the following modifications in order to demonstrate how we can write the problem recursively as a stationary dynamic program. Firstly, make the following modifications:
+\begin{align*}
+    & \quad \frac{c_t}{1+\gamma^t} + \frac{x_t}{1+\gamma^t} =\frac{1}{1+\gamma^t}k_t^{\theta} \left( (1+ \gamma_z)^t z_t   \right )^{1-\theta} = \left(\frac{k_t}{(1 + \gamma_z)^t}\right)^{\theta} \left( z_t\right )^{1-\theta}  \\
+          & \quad (1+\gamma_n)\frac{k_{t+1}}{1+\gamma^t} =(1+\gamma_z)(1+\gamma_n)\frac{k_{t+1}}{1+\gamma^{t+1}} =  (1-\delta)\frac{k_t}{1+\gamma^t} +\frac{x_t}{1+\gamma^t} \\
+          & \quad \log z_t = \rho \log z_{t-1} + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2) \\
+          & \quad l_t = 1 - h_t
+\end{align*}
+We can then write $\hat{\beta}=\beta(1-\gamma_n)$ and the original model can be written as:
+\begin{align*}
+  \max_{\{\hat{c}_t, \hat{x}_t\}} & \quad  E\sum_{t=0}^{\infty}
+                                    \hat{\beta}^t \{ \log(\hat{c}_t) +\phi \log(1-h_t) \}   \\
+  st:     & \quad \hat{c}_t + \hat{k}_{t+1} (1+ \gamma_z)(1+ \gamma_n) -
+  (1-\delta)\hat{k}_t = \hat{k}_t^{\theta}(h_t z_t)^{1-\theta}  \\
+          & \quad \log z_t = \rho \log z_{t-1} + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2) \\
+          & \quad \hat{c}_t , \hat{x}_t \geq 0 \text{ in all states}
+\end{align*}
+the allocations are being multiplied by $N_t$, however, the problem is written as a social planner problem, hence dynamic programming tools can be used to solve it. The state variables are $(k,z)$ and after further changes, we can write the bellman that we'll use for the different methods that will be demonstrated here.
+\begin{align*}
+  V(\hat{k},z) & = \max_{\{k'\}}
+                 \{\log\left(\hat{k}_t^{\theta}(h_tz_t)^{1-\theta} +
+                 (1-\delta)\hat{k}_t -\hat{k}_{t+1} (1+ \gamma_z)(1+
+                 \gamma_n)\right) + \phi \log(h_t)+ \hat{\beta} \int V(k',z')dF(z')    \} \\
+  st:         & \quad \log z_t = \rho \log z_{t-1} + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2) \\
+          & \quad \hat{c}_t , \hat{x}_t \geq 0 \text{ in all states}
+\end{align*}
+%%%%%%
+We will solve the follwing problem in the three ways. First we will solve this by value function iteration. A description of the implementation of this method is explained in the python file that I used to write the program. In order to set proper bounds on the solution first we'll solve for the steady state solution, and build a capital grid around the steady state. In order to find the steady state, we first can turn off stochastics and solve for steady state level through FOCs and envelope condition:
+\begin{align}
+   \frac{(1-\theta) \hat{k}^{\theta}(h)^{-\theta} }{\hat{k}^{\theta}(hz_t)^{1-\theta} + (1-\delta)\hat{k} -\hat{k'} (1+ \gamma_z)(1+\gamma_n)} = \frac{\psi}{1-h} && (h)  \label{eq:h} \\
+  \frac{(1+ \gamma_z)(1+\gamma_n)}{\hat{k}^{\theta}(h)^{1-\theta} + (1-\delta)\hat{k} -\hat{k'} (1+ \gamma_z)(1+\gamma_n)} = V'(k') && (k') \nonumber \\
+  \frac{\theta \hat{k}^{\theta-1}(h)^{1-\theta} + (1-\delta)}{\hat{k}^{\theta}(h)^{1-\theta} + (1-\delta)\hat{k} -\hat{k'} (1+ \gamma_z)(1+\gamma_n)} = V'(k) && (k) \nonumber
+\end{align}
+%%
+and the FOC on $k'$ and envelope condition lead to the following euler equation:
+\begin{align} \label{eq:euler}
+&\frac{(1+ \gamma_z)(1+\gamma_n)}{c} = \frac{\hat{\beta}}{c'} \left( \theta \hat{k}^{\theta-1}(h)^{1-\theta} + (1-\delta) \right)
+\end{align}
+%%%%%
+We want to pin down the steady state level of capital. In order to do this, we can use the first order conditions on $h$ to and the implied relationship between $k^*$ and $h^*$ from the euler equation above to get the two equations:
+
+%%%%%
+\begin{align}
+&\left[\left((1+\gamma_z) - \beta(1-\delta) \right)\frac{1}{\beta \theta}\right]^{\frac{1}{1-\theta}}= \frac{k^*}{h^*} = M \\
+&M =\left[(\psi +(1-\theta))M^{\theta} - (1-\theta)M^{\theta}\frac{1}{h^*} +\psi(1-\delta)M \right]\frac{1}{(1+\gamma_z) (1+\gamma_n)}
+\end{align}
+Solving these two equations  lead to the following expressions for $(k^*,h^*)$:
+\begin{align}
+&h^*= \frac{ (1-\theta)M^{\theta} }{(\psi + (1-\theta))M^{\theta} +\psi(1-\delta)M - \left[\psi(1+ \gamma_z)(1+ \gamma_n) \right]}   \\
+& k^* = h^*M
+\end{align}
+Although I solved for the steady state by hand in this document, in my code, I merely use equations \ref{eq:euler} and \ref{eq:h} along with a nonlinear solver to solve for the two unknowns which are $k_{ss}$ and $h_{ss}$. \\
+\\
+%%
+%%
+\textbf{1. Value function iteration} \\
+For this section the idea implemented is simple. We guess that the value function tomorrow assigns zero values to states tomorrow, and iterate on the bellman. According to theory, eventually, $||V^{n+1}-V^{n}||<\epsilon$ which is the solution to our problem. A few methods are used in order to solve our problem, I'll describe them here. \\
+\\
+\textit{a. Linear interpolation} \\
+\\
+Because, the minimize function from python assumes a continuous choice set, we have to approximate our value function through linear interpolation on the capital grid. In order to do this. Suppose that my choice of capital is $k$, then, I can approximate $V(k)$ by:
+$$V(k) \approx V(k(i)) +\frac{ V(k(i+1)) -V(k(i)) }{k(i+1) - k(i)} (k - k(i))$$
+where $k \in [k(i),k(i+1)]$ \\
+\\
+\textit{b. Integration of value function} \\
+\\
+In order to integrate the value function, I used Tauchen's method to discretize the state space and generate a transition matrix such that $P_{ij}$ describes the probability of transitioning to state $j$ from state $i$ where the three possible states are $z \in \{-0.5,0.0,0.5\}$ and the process is:
+$$\ln z_{t+1} = \rho \ln z_{t} + \epsilon_{t+1}  $$
+%%
+\textbf{2. Linear quadratic approximation} \\
+In this part, we'll first describe the linear quadratic problem and devise a strategy in order to map this problem to one that has a quadratic objective function and linear constraints, so that we can use linear algebre tools to quickly solve our problem. In particular, the problem needs to be written as follows:
+\begin{align*}
+  \max & \quad -E_0\sum_{t=0}^{\infty} \beta^t \left\{X'_tQX_t + u'_tRu_t + 2u'_tWX_t \right\}    \\
+  st:     & \quad x_{t+1} = Ax_t +Bu_t + C\epsilon_{t+1}  \\
+\end{align*}
+where:
+\begin{itemize}
+\item $X_t$ is the vector of states
+\item $u_t$ is the vector of controls
+\item $\epsilon_{t+1}$ is an incorrolate zero mean shock process satisfying $E\epsilon_t\epsilon'_t=I$
+\end{itemize}
+Further, let $\tilde{z}_t = \ln(z_t)$. In order to write the LQ problem above, define the following matrices:
+\begin{align*}
+  X_t = \left[ \begin{array}{c}
+                 1 \\
+                 \hat{k}_t \\
+                 \tilde{z}_t
+               \end{array} \right]
+  \quad \quad
+u_t = \left[ \begin{array}{c}
+                 \hat{h}_{t} \\
+               \tilde{k}_{t+1}
+               \end{array} \right]
+\end{align*}
+Which then implies that we can write the constraints as:
+\begin{align*}
+  \left[ \begin{array}{c}
+                 \hat{k}_{t+1} \\
+           \tilde{z}_{t+1} \\
+           1
+               \end{array} \right] =
+  \underbrace{\left[ \begin{array}{ccc}
+                 0 & 0    & 0  \\
+                       0 & \rho & 0  \\
+                       0 & 0 & 1
+       \end{array} \right]}_A
+                      \left[ \begin{array}{c}
+                 \hat{k}_{t} \\
+                               \tilde{z}_{t} \\
+                               1
+               \end{array} \right] +
+  \underbrace{\left[ \begin{array}{cc}
+                 0 & 1 \\
+                       0 & 0 \\
+                       0 & 0
+       \end{array} \right]}_B
+                     \left[ \begin{array}{c}
+                 h_{t} \\
+                 \hat{k}_{t+1}
+                             \end{array} \right]+
+   \underbrace{\left[ \begin{array}{c}
+                 0 \\
+                 1 \\
+                 0
+                             \end{array} \right]}_C
+  \epsilon_{t+1}
+\end{align*}
+Let $q_t = \left[ \begin{array}{c}
+                 X_t \\
+                 u_t
+                    \end{array} \right]$ The return function can be written as:
+$$\hat{r}(q_t)=\ln\left(\hat{k}_t^{\theta}(e^{\tilde{z}_t}h_t)^{1-\theta} - (1+\gamma_z)(1+\gamma_n)\hat{k}_{t+1} +(1-\delta)\hat{k}_t\right)+ \psi \ln (1-h_t)$$
+%
+%
+Then, we can take a taylor expansion in order to approximate this function that can be described as follows:
+%
+%
+\begin{align*}
+\hat{r}(q) = r(q) + (q-\bar{q})'\frac{\partial r}{\partial q} + \frac{1}{2}(q-\bar{q})'\frac{\partial^2 r}{\partial q \partial q'}(q-\bar{q})
+\end{align*}
+%
+%
+Then, letting $e=\left[ \begin{array}{c}
+                 1 \\
+                 0 \\
+                          0 \\
+                          0 \\
+0
+                        \end{array} \right]$
+%
+%
+so that the position of unity coincides with the unity added to the state vector. Further, note that $e'z=1$, we want to reorder the equation above so that it can be written quadratically, i.e.
+\begin{equation*}
+\hat{r}(q) = q'Mq
+\end{equation*}
+Ir order to do this, we must rearrange termsn above to get the follwing expression for $M$:
+%
+%Rewrite the taylor expansion in order to be able to write the
+%quadratic objective function.
+\begin{align*}
+M = e \left[r(\bar{q}) - \left(\frac{\partial r}{\partial q}\right)'\bar{q} +\frac{1}{2} \bar{q}'\frac{\partial^2 r}{\partial q \partial q'} \bar{q} \right] e' +
+%%%%%%%%%%%%
+\frac{1}{2}\left(\frac{\partial r}{\partial q}e' -               e\bar{q}' \frac{\partial^2 r}{\partial q \partial q'} -
+\frac{\partial^2 r}{\partial q \partial q'}\bar{q}'e +
+e \frac{\partial r}{\partial q}
+\right) e' +
+%%%%%%%%
+\frac{1}{2}\left(\frac{\partial^2 r}{\partial q \partial q'}\right)
+\end{align*}
+%
+%
+Once we gave the M matrix for our problem we can extract Q, R, and W
+by from $\hat{r}(q)$ which can be expressed as follows:
+\begin{align*}
+  \hat{r}(q) = q'Mq =
+  \left[ \begin{array}{c}
+                 x  \\
+                 u                  
+       \end{array} \right]'
+                      \left[ \begin{array}{cc}
+                 R & W \\
+               W' & Q
+               \end{array} \right] 
+       \left[ \begin{array}{c}
+                 x \\
+                 u 
+       \end{array} \right]
+\end{align*}
+Finally, we have a quadratic term in the objective function and we are
+left to turn the discounted problem into an undiscounted one, so that
+we can solve for the riccatti equation and optimal policy. Define the
+undiscounted variables as follows:
+\begin{align*}
+& \tilde{X}_t = \beta^{\frac{1}{2}} X_t \\
+& \tilde{u}_t = \beta^{\frac{1}{2}} (u_t + R^{-1}W'X_t) \\
+& \tilde{A} = \sqrt{\beta} (A - B R^{-1} W') \\
+& \tilde{B} = \sqrt{\beta} B \\
+& \tilde{Q} = Q - W R^{-1} W'
+\end{align*}  
+After this step the optimal decision is given by the algorith
+described in the notes.
+\\
+%
+%
+3. \textbf{Vaughn's method} \\
+Using the first order conditions of the linear regulator problem,
+Vaughan was able to notice that we can build a hamiltonian whose
+solution is even simopler to derive than through iteration on the
+Ricatti. Note that the FOCs of the problem can be written as follows:
+\begin{align*}
+  \left[ \begin{array}{c}
+                 \tilde{X}_t  \\
+                 \tilde{\lambda}_t                  
+       \end{array} \right] =
+                      \left[ \begin{array}{cc}
+                \tilde{A}^{-1} & \tilde{A}^{-1} \tilde{B} R^{-1} \tilde{B}'  \\
+               \tilde{Q} \tilde{A}^{-1} & \tilde{Q} \tilde{A}^{-1} \tilde{B} R^{-1} \tilde{B}'
+               \end{array} \right] 
+       \left[ \begin{array}{c}
+                 \tilde{X}_t  \\
+                \tilde{\lambda}_t
+              \end{array} \right]
+\end{align*}
+Then, we can let $\mathcal{H}$ be the coefficient matrix on the right
+hand side. Vaughan showed that this matrix can be decomposed and used
+directly to obtain the Riccati matrix P. So he can write the
+hamiltonian as:
+\begin{align*}
+ \mathcal{H} = \left[ \begin{array}{cc}
+                 V_{11} & V_{12}  \\
+                 V_{21} & V_{22}                  
+       \end{array} \right] 
+                      \left[ \begin{array}{cc}
+                \Lambda & 0  \\
+                0 & \Lambda^{-1}
+               \end{array} \right] 
+       \left[ \begin{array}{cc}
+                 V_{11} & V_{12}  \\
+                 V_{21} & V_{22}                  
+              \end{array} \right]^{-1}
+\end{align*}
+Then we can reorder the eigen vectors and keep the eigen vectors
+related to the eigen values above unity. Then if the representation
+above has already been reordered this way, then $P$ can be written as
+$P = V_{21} V_{11}^{-1}$
+%
+%
+\\
+\textbf{Checking for equivalence of the three methods}
+\\
+As far as checking the equivalence, I found the solution to the linear
+regulator representation of the growth model $P$ both by itarating on
+the ricatti matrix and by using Vaughan's method. My code is able to
+arrive at the same solution matrix $P$ and they coincide with the
+solution from the value function iteration. I plotted the LQ approximation
+against the value function iteration. I show that for a particular
+shock, I can get the value function from both methods to lie on top of
+each other. The \textit{dotted line} is the LQ solution and the solid
+line is the value function iteration solution.
+\begin{figure}[h!]
+\centering
+\begin{subfigure}[b]{.3\textwidth}
+  \includegraphics[width=\textwidth]{../code/plot_comph.png}
+  \caption{Policy function fro labor}
+\end{subfigure}
+\begin{subfigure}[b]{.3\textwidth}
+  \includegraphics[width=\textwidth]{../code/plot_compk.png}
+  \caption{Policy function for capital}
+\end{subfigure}
+\begin{subfigure}[b]{.3\textwidth}
+  \includegraphics[width=\textwidth]{../code/plot_compv.png}
+  \caption{Value function}
+\end{subfigure}
+\label{fig:one}
+\end{figure}
+\\
+\textbf{file system} - 6 files
+\\
+\begin{itemize}
+\item HW1\_shocks.py solves the model by value function iteration
+\item HW1LQreal.py solves the model's LQ approximation by
+  iteration on ricatti matrix
+  \item HW1\_vaughan solves the LQ approximation of the model by Vaughan's method
+\item HW1sumulate.py plots the value function and policy functions
+    plotted in this document
+  \item HW1\_lq.jl solves the lq approximation of the model with julia
+    \item HW1plots.jl are not featured in this document bc there is a
+      problem with them, but they are supposed to plot the impulse
+      response function. 
+\end{itemize}
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{hw1.bib}
+\end{document}
